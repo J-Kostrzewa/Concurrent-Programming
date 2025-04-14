@@ -81,6 +81,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 
         public void Start(int numberOfBalls)
         {
+            Console.WriteLine("Starting simulation");
             if (Disposed)
                 throw new ObjectDisposedException(nameof(MainWindowViewModel));
             ModelLayer.Start(numberOfBalls);

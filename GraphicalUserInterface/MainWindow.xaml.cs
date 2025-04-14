@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Controls;
 using TP.ConcurrentProgramming.Presentation.ViewModel;
 
 namespace TP.ConcurrentProgramming.PresentationView
@@ -9,22 +10,33 @@ namespace TP.ConcurrentProgramming.PresentationView
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Stałe wymiary logiczne stołu
+        private const double TableWidth = 400;
+        private const double TableHeight = 400;
+        private const double _aspectRatio = TableWidth / TableHeight;
+
         public MainWindow()
         {
-            Random random = new Random();
             InitializeComponent();
             MainWindowViewModel viewModel = (MainWindowViewModel)DataContext;
             double screenWidth = SystemParameters.PrimaryScreenWidth;
             double screenHeight = SystemParameters.PrimaryScreenHeight;
-            // Nie wywołujemy Start() w konstruktorze, bo będzie wywoływany przez przycisk
         }
 
         /// <summary>
         /// Metoda obsługująca zmianę rozmiaru okna
         /// </summary>
-        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
-            // Logika skalowania jest obsługiwana przez Viewbox w XAML
+            var percentWidthChange = Math.Abs(sizeInfo.NewSize.Width - sizeInfo.PreviousSize.Width) / sizeInfo.PreviousSize.Width;
+            var percentHeightChange = Math.Abs(sizeInfo.NewSize.Height - sizeInfo.PreviousSize.Height) / sizeInfo.PreviousSize.Height;
+
+            if (percentWidthChange > percentHeightChange)
+                this.Height = sizeInfo.NewSize.Width / _aspectRatio;
+            else
+                this.Width = sizeInfo.NewSize.Height * _aspectRatio;
+
+            base.OnRenderSizeChanged(sizeInfo);
         }
 
         /// <summary>

@@ -91,8 +91,8 @@ namespace TP.ConcurrentProgramming.Data
             //item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 10, (RandomGenerator.NextDouble() - 0.5) * 10));
             foreach (Ball item in BallsList)
                 item.Move(new Vector(
-                  (RandomGenerator.NextDouble() - 0.5) * 10 * _moveScaleFactor,
-                  (RandomGenerator.NextDouble() - 0.5) * 10 * _moveScaleFactor));
+                  (RandomGenerator.NextDouble() - 0.5) * 10 ,
+                  (RandomGenerator.NextDouble() - 0.5) * 10 ));
         }
 
         #endregion private
