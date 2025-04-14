@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Controls;
 using TP.ConcurrentProgramming.Presentation.ViewModel;
 
 namespace TP.ConcurrentProgramming.PresentationView
@@ -11,20 +12,8 @@ namespace TP.ConcurrentProgramming.PresentationView
     {
         public MainWindow()
         {
-            Random random = new Random();
             InitializeComponent();
             MainWindowViewModel viewModel = (MainWindowViewModel)DataContext;
-            double screenWidth = SystemParameters.PrimaryScreenWidth;
-            double screenHeight = SystemParameters.PrimaryScreenHeight;
-            // Nie wywołujemy Start() w konstruktorze, bo będzie wywoływany przez przycisk
-        }
-
-        /// <summary>
-        /// Metoda obsługująca zmianę rozmiaru okna
-        /// </summary>
-        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            // Logika skalowania jest obsługiwana przez Viewbox w XAML
         }
 
         /// <summary>

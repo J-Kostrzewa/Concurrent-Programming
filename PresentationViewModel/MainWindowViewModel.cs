@@ -9,6 +9,8 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using TP.ConcurrentProgramming.Presentation.Model;
 using TP.ConcurrentProgramming.Presentation.ViewModel.MVVMLight;
@@ -26,6 +28,12 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         internal MainWindowViewModel(ModelAbstractApi modelLayerAPI)
         {
             ModelLayer = modelLayerAPI == null ? ModelAbstractApi.CreateModel() : modelLayerAPI;
+
+            ModelLayer.ScaleFactor = 2.3;
+
+            // Aktualizacja wymiarów obszaru gry
+            UpdateGameAreaDimensions();
+
             Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
 
             // Inicjalizacja komend
@@ -38,7 +46,58 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 
         #region public API
 
+        private double _windowWidth;
+        private double _windowHeight;
         private int _ballCount = 5; // Domyślna liczba kul
+
+        // Logiczne wymiary obszaru gry
+        private const double LogicalGameAreaSize = 400;
+        private const double BorderThickness = 5;
+        private const double CanvasMargin = 5;
+
+        // Skalowane wymiary obszaru gry
+        private double _gameAreaSize;
+        public double GameAreaSize
+        {
+            get => _gameAreaSize;
+            set
+            {
+                if (_gameAreaSize != value)
+                {
+                    _gameAreaSize = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        // Wymiary Canvas uwzględniające marginesy
+        private double _canvasSize;
+        public double CanvasSize
+        {
+            get => _canvasSize;
+            set
+            {
+                if (_canvasSize != value)
+                {
+                    _canvasSize = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        // Metoda aktualizująca wymiary obszaru gry na podstawie współczynnika skalowania
+        private void UpdateGameAreaDimensions()
+        {
+            double scale = ModelLayer.ScaleFactor;
+            GameAreaSize = LogicalGameAreaSize * scale;
+
+            // Canvas ma rozmiar obszaru gry plus marginesy
+            CanvasSize = GameAreaSize + (BorderThickness * 2);
+
+            // Ustawienie wymiarów okna
+            WindowWidth = CanvasSize + 120;
+            WindowHeight = CanvasSize + 150;
+        }
         public int BallCount
         {
             get => _ballCount;
@@ -56,6 +115,24 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
         public ICommand IncreaseBallCountCommand { get; }
         public ICommand DecreaseBallCountCommand { get; }
         public ICommand StartCommand { get; }
+
+        public double WindowWidth
+        {
+            get => _windowWidth;
+            set
+            {
+                _windowWidth = value;
+            }
+        }
+
+        public double WindowHeight
+        {
+            get => _windowHeight;
+            set
+            {
+                _windowHeight = value;
+            }
+        }
 
         private int maxBalls = 10;
         private bool isRunning = false; // Flaga do sprawdzania, czy model jest uruchomiony
