@@ -54,14 +54,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 if (position == null)
                     throw new ArgumentNullException(nameof(position), "Position cannot be null.");
 
-                // Zabezpieczenie przed zapętleniem
                 if (_isUpdating)
                     return;
 
                 try
                 {
                     _isUpdating = true;
-                    // Możesz tutaj aktualizować wewnętrzną pozycję jeśli jest potrzebna
                     NewPositionNotification?.Invoke(this, position);
                 }
                 finally

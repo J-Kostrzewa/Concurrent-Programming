@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using TP.ConcurrentProgramming.BusinessLogic;
 using UnderneathLayerAPI = TP.ConcurrentProgramming.BusinessLogic.BusinessLogicAbstractAPI;
 
 namespace TP.ConcurrentProgramming.Presentation.Model
@@ -71,6 +72,25 @@ namespace TP.ConcurrentProgramming.Presentation.Model
         public override void Start(int numberOfBalls)
         {
             layerBellow.Start(numberOfBalls, StartHandler);
+        }
+
+        public override double LogicalGameAreaWidth => BusinessLogicAbstractAPI.GetDimensions.TableWidth;
+        public override double LogicalGameAreaHeight => BusinessLogicAbstractAPI.GetDimensions.TableHeight;
+        public override double BallDiameter => BusinessLogicAbstractAPI.GetDimensions.BallDimension;
+
+        public override void UpdateDimensions(double borderThickness,
+                                        double extraWindowWidth,
+                                        double extraWindowHeight,
+                                        Action<double, double, double> dimensionsUpdatedCallback)
+        {
+            double gameAreaWidth = LogicalGameAreaWidth * _scaleFactor;
+            double gameAreaHeight = LogicalGameAreaHeight * _scaleFactor;
+            double canvasSize = Math.Max(gameAreaWidth, gameAreaHeight) + (borderThickness * 2);
+            double windowWidth = canvasSize + extraWindowWidth;
+            double windowHeight = canvasSize + extraWindowHeight;
+
+            // Wywołaj callback do aktualizacji UI
+            dimensionsUpdatedCallback(gameAreaWidth, windowWidth, windowHeight);
         }
 
         #endregion ModelAbstractApi

@@ -12,46 +12,66 @@ using TP.ConcurrentProgramming.BusinessLogic;
 
 namespace TP.ConcurrentProgramming.Presentation.Model.Test
 {
-  [TestClass]
-  public class ModelBallUnitTest
-  {
-    [TestMethod]
-    public void ConstructorTestMethod()
+    [TestClass]
+    public class ModelBallUnitTest
     {
-      ModelBall ball = new ModelBall(0.0, 0.0, new BusinessLogicIBallFixture());
-      Assert.AreEqual<double>(0.0, ball.Top);
-      Assert.AreEqual<double>(0.0, ball.Top);
+        [TestMethod]
+        public void ConstructorTestMethod()
+        {
+            ModelBall ball = new ModelBall(0.0, 0.0, new BusinessLogicIBallFixture());
+            Assert.AreEqual<double>(0.0, ball.Top);
+            Assert.AreEqual<double>(0.0, ball.Top);
+        }
+
+        [TestMethod]
+        public void PositionChangeNotificationTestMethod()
+        {
+            int notificationCounter = 0;
+            ModelBall ball = new ModelBall(0, 0.0, new BusinessLogicIBallFixture());
+            ball.PropertyChanged += (sender, args) => notificationCounter++;
+            Assert.AreEqual(0, notificationCounter);
+            ball.SetLeft(1.0);
+            Assert.AreEqual<int>(1, notificationCounter);
+            Assert.AreEqual<double>(1.0, ball.Left);
+            Assert.AreEqual<double>(0.0, ball.Top);
+            ball.SettTop(1.0);
+            Assert.AreEqual(2, notificationCounter);
+            Assert.AreEqual<double>(1.0, ball.Left);
+            Assert.AreEqual<double>(1.0, ball.Top);
+        }
+
+        [TestMethod]
+        public void UpdateScale_ShouldRecalculatePositionAndDiameter()
+        {
+
+            double originalDiameter = 10.0;
+            double originalTop = 50.0;
+            double originalLeft = 100.0;
+            double initialScale = 1.0;
+            double newScale = 2.0;
+
+            ModelBall ball = new ModelBall(originalTop, originalLeft, new BusinessLogicIBallFixture(), initialScale);
+            ball.Diameter = originalDiameter;
+
+            ball.UpdateScale(newScale);
+
+            Assert.AreEqual(originalTop * newScale, ball.Top, "Top position should be scaled");
+            Assert.AreEqual(originalLeft * newScale, ball.Left, "Left position should be scaled");
+            Assert.AreEqual(originalDiameter * newScale, ball.Diameter, "Diameter should be scaled");
+        }
+
+        #region testing instrumentation
+
+        private class BusinessLogicIBallFixture : BusinessLogic.IBall
+        {
+            public event EventHandler<IPosition>? NewPositionNotification;
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion testing instrumentation
     }
-
-    [TestMethod]
-    public void PositionChangeNotificationTestMethod()
-    {
-      int notificationCounter = 0;
-      ModelBall ball = new ModelBall(0, 0.0, new BusinessLogicIBallFixture());
-      ball.PropertyChanged += (sender, args) => notificationCounter++;
-      Assert.AreEqual(0, notificationCounter);
-      ball.SetLeft(1.0);
-      Assert.AreEqual<int>(1, notificationCounter);
-      Assert.AreEqual<double>(1.0, ball.Left);
-      Assert.AreEqual<double>(0.0, ball.Top);
-      ball.SettTop(1.0);
-      Assert.AreEqual(2, notificationCounter);
-      Assert.AreEqual<double>(1.0, ball.Left);
-      Assert.AreEqual<double>(1.0, ball.Top);
-    }
-
-    #region testing instrumentation
-
-    private class BusinessLogicIBallFixture : BusinessLogic.IBall
-    {
-      public event EventHandler<IPosition>? NewPositionNotification;
-
-      public void Dispose()
-      {
-        throw new NotImplementedException();
-      }
-    }
-
-    #endregion testing instrumentation
-  }
 }

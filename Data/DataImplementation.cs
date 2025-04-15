@@ -89,8 +89,8 @@ namespace TP.ConcurrentProgramming.Data
         {
             foreach (Ball item in BallsList)
                 item.Move(new Vector(
-                  (RandomGenerator.NextDouble() - 0.5) * 10 ,
-                  (RandomGenerator.NextDouble() - 0.5) * 10 ));
+                  (RandomGenerator.NextDouble() - 0.5) * 10,
+                  (RandomGenerator.NextDouble() - 0.5) * 10));
         }
 
         #endregion private

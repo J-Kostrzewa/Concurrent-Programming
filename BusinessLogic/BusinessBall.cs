@@ -8,10 +8,6 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System.Numerics;
-using System;
-using TP.ConcurrentProgramming.Data;
-
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class Ball : IBall
@@ -36,7 +32,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             NewPositionNotification?.Invoke(this, new Position(position.x, position.y));
         }
 
-        private void WallCollisionCheck(Data.IBall ball, Data.IVector position)
+        internal void WallCollisionCheck(Data.IBall ball, Data.IVector position)
         {
             // Pobieramy wymiary stołu i kulki z API warstwy logiki
             double ballDiameter = BusinessLogicAbstractAPI.GetDimensions.BallDimension;
