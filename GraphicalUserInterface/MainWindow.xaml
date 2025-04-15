@@ -7,56 +7,61 @@
         mc:Ignorable="d"
         Title="Presentation layer targeting reactive behaviour" 
         
-        MinWidth="450" MinHeight="500">
+        MinWidth="{Binding WindowWidth}" MinHeight="{Binding WindowHeight}" MaxWidth="{Binding WindowWidth}" MaxHeight="{Binding WindowHeight}">
     <Window.DataContext>
-        <vm:MainWindowViewModel />
+        <vm:MainWindowViewModel/>
     </Window.DataContext>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
+    <StackPanel Margin="20">
         <!-- Przyciski sterujące -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <!-- Przycisk zmniejszający liczbę kul -->
-            <Button Content="-" Command="{Binding DecreaseBallCountCommand}" Margin="5" Width="30" />
+        <StackPanel Orientation="Horizontal" 
+                HorizontalAlignment="Center" 
+                Margin="0,0,0,20">
+            <Button Content="-" 
+                Command="{Binding DecreaseBallCountCommand}" 
+                Width="40" Height="30"
+                Margin="10,0"/>
 
-            <!-- Pole wyświetlające liczbę kul -->
-            <TextBlock Text="{Binding BallCount}" VerticalAlignment="Center" FontSize="16" Margin="5" Width="50" TextAlignment="Center" />
+            <TextBlock Text="{Binding BallCount}" 
+                   VerticalAlignment="Center" 
+                   FontSize="18" 
+                   Width="60" 
+                   TextAlignment="Center"/>
 
-            <!-- Przycisk zwiększający liczbę kul -->
-            <Button Content="+" Command="{Binding IncreaseBallCountCommand}" Margin="5" Width="30" />
+            <Button Content="+" 
+                Command="{Binding IncreaseBallCountCommand}" 
+                Width="40" Height="30"
+                Margin="10,0"/>
 
-            <!-- Przycisk start -->
-            <Button Content="Start" Command="{Binding StartCommand}" Margin="5" Width="75" />
+            <Button Content="Start" 
+                Command="{Binding StartCommand}" 
+                Width="90" Height="30"
+                Margin="10,0"/>
         </StackPanel>
 
         <!-- Obszar wyświetlania kul -->
-        <Border Grid.Row="1" BorderThickness="5" BorderBrush="Green" Margin="10">
-            <Viewbox Stretch="Uniform">
-                <Canvas Width="410" Height="410" Margin="5">
-
-                    <ItemsControl ItemsSource="{Binding Balls}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <Canvas />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Ellipse Width="{Binding Diameter}" Height="{Binding Diameter}" Fill="Blue" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                        <ItemsControl.ItemContainerStyle>
-                            <Style TargetType="ContentPresenter">
-                                <Setter Property="Canvas.Top" Value="{Binding Top}" />
-                                <Setter Property="Canvas.Left" Value="{Binding Left}" />
-                            </Style>
-                        </ItemsControl.ItemContainerStyle>
-                    </ItemsControl>
-                </Canvas>
-            </Viewbox>
+        <Border BorderThickness="5" BorderBrush="Green" HorizontalAlignment="Center">
+            <Canvas Width="{Binding GameAreaSize}" Height="{Binding GameAreaSize}" Margin="5" Background="White">
+                <ItemsControl ItemsSource="{Binding Balls}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Ellipse Width="{Binding Diameter}" 
+                                 Height="{Binding Diameter}" 
+                                 Fill="Blue"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="Canvas.Top" Value="{Binding Top}"/>
+                            <Setter Property="Canvas.Left" Value="{Binding Left}"/>
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+            </Canvas>
         </Border>
-    </Grid>
+    </StackPanel>
 </Window>

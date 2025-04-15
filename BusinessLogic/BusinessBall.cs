@@ -8,10 +8,6 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System.Numerics;
-using System;
-using TP.ConcurrentProgramming.Data;
-
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class Ball : IBall
@@ -36,7 +32,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             NewPositionNotification?.Invoke(this, new Position(position.x, position.y));
         }
 
-        private void WallCollisionCheck(Data.IBall ball, Data.IVector position)
+        internal void WallCollisionCheck(Data.IBall ball, Data.IVector position)
         {
             // Pobieramy wymiary stołu i kulki z API warstwy logiki
             double ballDiameter = BusinessLogicAbstractAPI.GetDimensions.BallDimension;
@@ -47,9 +43,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             double posX = position.x;
             double posY = position.y;
             Data.IVector velocity = ((Data.IBall)ball).Velocity;
-
-            // Promień kulki (połowa średnicy)
-            //double radius = ballDiameter / 2;
 
             bool collisionDetected = false;
             double newVelocityX = velocity.x;
@@ -91,7 +84,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic
                 ((Data.IBall)ball).Velocity = new BusinessVector(newVelocityX, newVelocityY);
                 ((Data.IBall)ball).SetPosition(new BusinessVector(newPosX, newPosY));
                 collisionDetected = false;
-                Console.WriteLine("TEST");
             }
 
         }
