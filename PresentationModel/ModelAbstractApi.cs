@@ -31,6 +31,14 @@ namespace TP.ConcurrentProgramming.Presentation.Model
 
         public abstract void Start(int numberOfBalls);
 
+        
+        public abstract double LogicalGameAreaWidth { get; }
+        public abstract double LogicalGameAreaHeight { get; }
+        public abstract double BallDiameter { get; }
+
+        // Metoda do aktualizacji wymiarów UI
+        public abstract void UpdateDimensions(double borderThickness,double extraWindowWidth,double extraWindowHeight,Action<double, double, double> dimensionsUpdatedCallback);
+
         #region IObservable
 
         public abstract IDisposable Subscribe(IObserver<IBall> observer);

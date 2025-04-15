@@ -57,18 +57,25 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
         }
 
         [TestMethod]
-        public void UpdateGameAreaDimensions_ShouldCalculateCorrectDimensions()
+        public void UpdateDimensions_CorrectlyUpdatesViewModelProperties()
         {
+            // Arrange
             ModelSimulatorFixture modelFixture = new ModelSimulatorFixture();
             MainWindowViewModel viewModel = new MainWindowViewModel(modelFixture);
 
-            modelFixture.ScaleFactor = 0.5;
-            viewModel.UpdateGameAreaDimensions();
+            // Przygotowanie wartoœci testowych
+            double gameAreaSize = 200.0;
+            double windowWidth = 330.0;
+            double windowHeight = 360.0;
 
-            Assert.AreEqual(200.0, viewModel.GameAreaSize);  // 400 * 0.5
-            Assert.AreEqual(210.0, viewModel.CanvasSize);    // 200 + (5 * 2)
-            Assert.AreEqual(330.0, viewModel.WindowWidth);   // 210 + 120
-            Assert.AreEqual(360.0, viewModel.WindowHeight);  // 210 + 150
+            // Act - symulacja wywo³ania UpdateDimensions z warstwy modelu
+            modelFixture.SimulateUpdateDimensions(gameAreaSize, windowWidth, windowHeight);
+
+            // Assert - sprawdzenie, czy ViewModel poprawnie zaktualizowa³ swoje w³aœciwoœci
+            Assert.AreEqual(gameAreaSize, viewModel.GameAreaSize);
+            Assert.AreEqual(gameAreaSize + 10, viewModel.CanvasSize);  // BorderThickness * 2 = 10
+            Assert.AreEqual(windowWidth, viewModel.WindowWidth);
+            Assert.AreEqual(windowHeight, viewModel.WindowHeight);
         }
 
         #region testing infrastructure
@@ -84,6 +91,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
             internal int ScaleFactorGetCount = 0;
             internal int ScaleFactorSetCount = 0;
             private double _scaleFactor = 1.0;
+            private Action<double, double, double> _lastCallback;
 
             #endregion Test
 
@@ -102,6 +110,20 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
                     _scaleFactor = value;
                 }
             }
+
+            public override double LogicalGameAreaWidth => 400;
+            public override double LogicalGameAreaHeight => 400;
+            public override double BallDiameter => 20;
+
+            public override void UpdateDimensions(double borderThickness, double extraWindowWidth, double extraWindowHeight, Action<double, double, double> dimensionsUpdatedCallback)
+            {
+                _lastCallback = dimensionsUpdatedCallback;
+                double gameAreaSize = LogicalGameAreaWidth * ScaleFactor;
+                double windowWidth = gameAreaSize + (borderThickness * 2) + extraWindowWidth;
+                double windowHeight = gameAreaSize + (borderThickness * 2) + extraWindowHeight;
+                dimensionsUpdatedCallback(gameAreaSize, windowWidth, windowHeight);
+            }
+
 
             public override void Dispose()
             {
@@ -138,6 +160,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
 
             internal bool Disposed = false;
             private double _scaleFactor = 1.0;
+            private Action<double, double, double> _lastCallback;
 
             #endregion Testing indicators
 
@@ -156,6 +179,27 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel.Test
             {
                 get => _scaleFactor;
                 set => _scaleFactor = value;
+            }
+
+            public override double LogicalGameAreaWidth => 400;
+            public override double LogicalGameAreaHeight => 400;
+            public override double BallDiameter => 20;
+
+            public override void UpdateDimensions(double borderThickness, double extraWindowWidth, double extraWindowHeight, Action<double, double, double> dimensionsUpdatedCallback)
+            {
+                _lastCallback = dimensionsUpdatedCallback;
+                double gameAreaSize = LogicalGameAreaWidth * ScaleFactor;
+                double windowWidth = gameAreaSize + (borderThickness * 2) + extraWindowWidth;
+                double windowHeight = gameAreaSize + (borderThickness * 2) + extraWindowHeight;
+                dimensionsUpdatedCallback(gameAreaSize, windowWidth, windowHeight);
+            }
+
+            public void SimulateUpdateDimensions(double gameAreaSize, double windowWidth, double windowHeight)
+            {
+                if (_lastCallback != null)
+                {
+                    _lastCallback(gameAreaSize, windowWidth, windowHeight);
+                }
             }
 
             public override IDisposable? Subscribe(IObserver<ModelIBall> observer)
