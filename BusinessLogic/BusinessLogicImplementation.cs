@@ -9,14 +9,16 @@
 //_____________________________________________________________________________________________________________________________________
 
 using System.Diagnostics;
+using System.Numerics;
 using UnderneathLayerAPI = TP.ConcurrentProgramming.Data.DataAbstractAPI;
 
 namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class BusinessLogicImplementation : BusinessLogicAbstractAPI
     {
-        #region ctor
-
+        private bool Disposed = false;
+        private readonly UnderneathLayerAPI layerBellow;
+        
         public BusinessLogicImplementation() : this(null)
         { }
 
@@ -25,16 +27,34 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             layerBellow = underneathLayer == null ? UnderneathLayerAPI.GetDataLayer() : underneathLayer;
         }
 
-        #endregion ctor
-
-        #region BusinessLogicAbstractAPI
-
-        public override void Dispose()
+        //Wall collision check
+        internal void WallCollision(Data.IBall ball)
         {
-            if (Disposed)
-                throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
-            layerBellow.Dispose();
-            Disposed = true;
+            double tableWidth = layerBellow.getWidth();
+            double tableHeight = layerBellow.getHeight();
+            
+            if (ball.Position.X - ball.Radius <= 0 || ball.Position.X + ball.Radius >= tableWidth)
+                ball.Velocity = new Vector2(-ball.Velocity.X, ball.Velocity.Y);
+            if (ball.Position.Y - ball.Radius <= 0 || ball.Position.Y + ball.Radius >= tableHeight)
+                ball.Velocity = new Vector2(ball.Velocity.X, -ball.Velocity.Y);             
+        }
+
+        //Ball collision check
+        internal void BallCollision(Data.IBall ball)
+        {
+            List<Data.IBall> balls = layerBellow.getAllBalls();
+            foreach (var otherBall in balls)
+            {
+                if (otherBall != ball)
+                {
+                    double distance = Math.Sqrt(Math.Pow(ball.Position.X - otherBall.Position.X, 2) + Math.Pow(ball.Position.Y - otherBall.Position.Y, 2));
+                    if (distance <= ball.Radius + otherBall.Radius)
+                    {
+                        Vector2 newVelocity = new Vector2(-ball.Velocity.X, -ball.Velocity.Y);
+                        ball.Velocity = newVelocity;
+                    }
+                }
+            }
         }
 
         public override void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler)
@@ -46,17 +66,13 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             layerBellow.Start(numberOfBalls, (startingPosition, databall) => upperLayerHandler(new Position(startingPosition.x, startingPosition.x), new Ball(databall)));
         }
 
-        #endregion BusinessLogicAbstractAPI
-
-        #region private
-
-        private bool Disposed = false;
-
-        private readonly UnderneathLayerAPI layerBellow;
-
-        #endregion private
-
-        #region TestingInfrastructure
+        public override void Dispose()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
+            layerBellow.Dispose();
+            Disposed = true;
+        }
 
         [Conditional("DEBUG")]
         internal void CheckObjectDisposed(Action<bool> returnInstanceDisposed)
@@ -64,6 +80,5 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             returnInstanceDisposed(Disposed);
         }
 
-        #endregion TestingInfrastructure
     }
 }

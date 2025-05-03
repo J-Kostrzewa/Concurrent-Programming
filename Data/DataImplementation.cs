@@ -8,27 +8,35 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System;
 using System.Diagnostics;
 
 namespace TP.ConcurrentProgramming.Data
 {
     internal class DataImplementation : DataAbstractAPI
     {
-        #region ctor
+        private bool Disposed = false;
+        private readonly int width = 400;
+        private readonly int height = 400;
+        private List<IBall> BallsList = [];
 
         public DataImplementation()
         {
-            // Ustawienie stałego framerate ~60 FPS (1000ms / 60 ≈ 16.7ms)
-            const int frameRateMs = 16;
-            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(frameRateMs));
-            // Obliczenie współczynnika skalowania dla ruchu
-            _moveScaleFactor = frameRateMs / 100.0; // Względem oryginalnego interwału 100ms
+            
         }
 
-        #endregion ctor
+        public override int getWidth()
+        {
+            return width;
+        }
+        public override int getHeight()
+        {
+            return height;
+        }
 
-        #region DataAbstractAPI
+        public override List<IBall> getAllBalls()
+        {
+            return BallsList;
+        }
 
         public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
         {
@@ -39,16 +47,12 @@ namespace TP.ConcurrentProgramming.Data
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
-                Vector startingPosition = new(random.Next(0, 390), random.Next(0, 390));
-                Ball newBall = new(startingPosition, startingPosition);
+                Vector startingPosition = new(random.Next(10, width - 10), random.Next(10, height - 10));
+                Ball newBall = new(startingPosition);
                 upperLayerHandler(startingPosition, newBall);
                 BallsList.Add(newBall);
             }
         }
-
-        #endregion DataAbstractAPI
-
-        #region IDisposable
 
         protected virtual void Dispose(bool disposing)
         {
@@ -56,7 +60,6 @@ namespace TP.ConcurrentProgramming.Data
             {
                 if (disposing)
                 {
-                    MoveTimer.Dispose();
                     BallsList.Clear();
                 }
                 Disposed = true;
@@ -67,35 +70,9 @@ namespace TP.ConcurrentProgramming.Data
 
         public override void Dispose()
         {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        #endregion IDisposable
-
-        #region private
-
-        //private bool disposedValue;
-        private bool Disposed = false;
-
-        private readonly Timer MoveTimer;
-        private Random RandomGenerator = new();
-        private List<Ball> BallsList = [];
-
-        private readonly double _moveScaleFactor;
-
-        private void Move(object? x)
-        {
-            foreach (Ball item in BallsList)
-                item.Move(new Vector(
-                  (RandomGenerator.NextDouble() - 0.5) * 10,
-                  (RandomGenerator.NextDouble() - 0.5) * 10));
-        }
-
-        #endregion private
-
-        #region TestingInfrastructure
 
         [Conditional("DEBUG")]
         internal void CheckBallsList(Action<IEnumerable<IBall>> returnBallsList)
@@ -115,6 +92,5 @@ namespace TP.ConcurrentProgramming.Data
             returnInstanceDisposed(Disposed);
         }
 
-        #endregion TestingInfrastructure
     }
 }
