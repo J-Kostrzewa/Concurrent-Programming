@@ -19,7 +19,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         {
             ball.NewPositionNotification += RaisePositionChangeEvent;
         }
-
+        
         public event EventHandler<IPosition>? NewPositionNotification;
 
         private void RaisePositionChangeEvent(object? sender, Vector2 position)

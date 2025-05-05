@@ -41,6 +41,7 @@ namespace TP.ConcurrentProgramming.Data
         Vector2 Velocity { get; set; }
         bool IsMoving { get; set; }
         int Radius { get; }
+        int Mass { get; }
         void StartThread();
 
     }

@@ -28,33 +28,19 @@ namespace TP.ConcurrentProgramming.Presentation.Model
 
         // Współczynnik skalowania dla elementów graficznych
         public abstract double ScaleFactor { get; set; }
-
-        public abstract void Start(int numberOfBalls);
-
-        
         public abstract double LogicalGameAreaWidth { get; }
         public abstract double LogicalGameAreaHeight { get; }
         public abstract double BallDiameter { get; }
 
+        public abstract void Start(int numberOfBalls);
         // Metoda do aktualizacji wymiarów UI
         public abstract void UpdateDimensions(double borderThickness,double extraWindowWidth,double extraWindowHeight,Action<double, double, double> dimensionsUpdatedCallback);
 
-        #region IObservable
-
         public abstract IDisposable Subscribe(IObserver<IBall> observer);
-
-        #endregion IObservable
-
-        #region IDisposable
 
         public abstract void Dispose();
 
-        #endregion IDisposable
-
-        #region private
-
         private static Lazy<ModelAbstractApi> modelInstance = new Lazy<ModelAbstractApi>(() => new ModelImplementation());
 
-        #endregion private
     }
 }

@@ -8,29 +8,59 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
+
 namespace TP.ConcurrentProgramming.Data.Test
 {
-  [TestClass]
-  public class BallUnitTest
-  {
-    [TestMethod]
-    public void ConstructorTestMethod()
+    [TestClass]
+    public class BallUnitTest
     {
-      Vector testinVector = new Vector(0.0, 0.0);
-      Ball newInstance = new(testinVector, testinVector);
-    }
+        [TestMethod]
+        public void ConstructorTestMethod()
+        {
+            Vector2 testingVector = new Vector2(0.0f, 0.0f);
+            Ball newInstance = new(testingVector);
 
-    [TestMethod]
-    public void MoveTestMethod()
-    {
-      Vector initialPosition = new(10.0, 10.0);
-      Ball newInstance = new(initialPosition, new Vector(0.0, 0.0));
-      IVector curentPosition = new Vector(0.0, 0.0);
-      int numberOfCallBackCalled = 0;
-      newInstance.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); curentPosition = position; numberOfCallBackCalled++; };
-      newInstance.Move(new Vector(0.0, 0.0));
-      Assert.AreEqual<int>(1, numberOfCallBackCalled);
-      Assert.AreEqual<IVector>(initialPosition, curentPosition);
+            Assert.AreEqual(testingVector, newInstance.Position);
+            Assert.AreEqual(10, ((IBall)newInstance).Radius);
+            Assert.AreEqual(5, newInstance.Mass);
+            Assert.IsFalse(newInstance.IsMoving);
+            Assert.IsNotNull(newInstance.Velocity);
+        }
+
+        [TestMethod]
+        public void VelocitySetterTest()
+        {
+            Vector2 initialPosition = new Vector2(10.0f, 10.0f);
+            Ball newInstance = new(initialPosition);
+            Vector2 newVelocity = new Vector2(5.0f, 7.0f);
+
+            newInstance.Velocity = newVelocity;
+
+            Assert.AreEqual(newVelocity, newInstance.Velocity);
+        }
+
+        [TestMethod]
+        public void IsMovingSetterTest()
+        {
+            Vector2 initialPosition = new Vector2(10.0f, 10.0f);
+            Ball newInstance = new(initialPosition);
+
+            Assert.IsFalse(newInstance.IsMoving);
+
+            // Zmiana wartości
+            newInstance.IsMoving = true;
+            Assert.IsTrue(newInstance.IsMoving);
+        }
+
+        [TestMethod]
+        public void RadiusAndMassPropertiesTest()
+        {
+            Vector2 initialPosition = new Vector2(10.0f, 10.0f);
+            Ball newInstance = new(initialPosition);
+
+            Assert.AreEqual(10, ((IBall)newInstance).Radius);
+            Assert.AreEqual(5, newInstance.Mass);
+        }
     }
-  }
 }

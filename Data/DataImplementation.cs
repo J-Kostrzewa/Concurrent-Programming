@@ -9,6 +9,7 @@
 //_____________________________________________________________________________________________________________________________________
 
 using System.Diagnostics;
+using System.Numerics;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -35,10 +36,10 @@ namespace TP.ConcurrentProgramming.Data
 
         public override List<IBall> getAllBalls()
         {
-            return BallsList;
+            return new List<IBall>(BallsList);
         }
 
-        public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
+        public override void Start(int numberOfBalls, Action<Vector2, IBall> upperLayerHandler)
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(DataImplementation));
@@ -47,10 +48,11 @@ namespace TP.ConcurrentProgramming.Data
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
-                Vector startingPosition = new(random.Next(10, width - 10), random.Next(10, height - 10));
+                Vector2 startingPosition = new(random.Next(10, width - 10), random.Next(10, height - 10));
                 Ball newBall = new(startingPosition);
                 upperLayerHandler(startingPosition, newBall);
                 BallsList.Add(newBall);
+                newBall.StartThread();
             }
         }
 

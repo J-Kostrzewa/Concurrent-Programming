@@ -18,6 +18,7 @@ namespace TP.ConcurrentProgramming.Data
         private Vector2 position;
         private Vector2 velocity;
         private readonly int radius = 10;
+        private readonly int mass = 5;
         private readonly object positionLock = new object();
         private readonly object velocityLock = new object();
         private bool isMoving;
@@ -50,13 +51,15 @@ namespace TP.ConcurrentProgramming.Data
                 isMoving = value;
             }
         }
+        public int Mass => mass;
 
         public void StartThread()
         {
             Thread thread = new Thread(Move);
+            thread.IsBackground = true;
             thread.Start();
         }
-        private async void Move()
+        internal async void Move()
         {
             isMoving = true;
             while (isMoving)
@@ -64,13 +67,21 @@ namespace TP.ConcurrentProgramming.Data
                 lock (positionLock)
                 {
                     //position = new Vector2(position.X + velocity.X, position.Y + velocity.Y);
-                    position += velocity;
+                    position += velocity * 0.5f;
                 }
-                double calculatedVelocity = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
-                await Task.Delay((int)(1000 / calculatedVelocity));
+                RaiseNewPositionChangeNotification();
+
+                // Oblicz opóźnienie na podstawie prędkości
+                double speed;
+                lock (velocityLock)
+                {
+                    speed = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
+                }
+                int delay = (int)Math.Clamp(1000 / (speed * 40), 10, 30);
+                await Task.Delay(delay);
             }
 
-            RaiseNewPositionChangeNotification();
+            
         }
         private void RaiseNewPositionChangeNotification()
         {

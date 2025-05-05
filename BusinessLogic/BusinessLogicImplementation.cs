@@ -16,6 +16,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class BusinessLogicImplementation : BusinessLogicAbstractAPI
     {
+        private readonly object _collisionLock = new object();
         private bool Disposed = false;
         private readonly UnderneathLayerAPI layerBellow;
         
@@ -30,31 +31,42 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         //Wall collision check
         internal void WallCollision(Data.IBall ball)
         {
-            double tableWidth = layerBellow.getWidth();
-            double tableHeight = layerBellow.getHeight();
-            
-            if (ball.Position.X - ball.Radius <= 0 || ball.Position.X + ball.Radius >= tableWidth)
-                ball.Velocity = new Vector2(-ball.Velocity.X, ball.Velocity.Y);
-            if (ball.Position.Y - ball.Radius <= 0 || ball.Position.Y + ball.Radius >= tableHeight)
-                ball.Velocity = new Vector2(ball.Velocity.X, -ball.Velocity.Y);             
+            lock (_collisionLock)
+            {
+                double tableWidth = layerBellow.getWidth();
+                double tableHeight = layerBellow.getHeight();
+
+                if (ball.Position.X - ball.Radius <= 0 || ball.Position.X + ball.Radius >= tableWidth)
+                    ball.Velocity = new Vector2(-ball.Velocity.X, ball.Velocity.Y);
+                if (ball.Position.Y - ball.Radius <= 0 || ball.Position.Y + ball.Radius >= tableHeight)
+                    ball.Velocity = new Vector2(ball.Velocity.X, -ball.Velocity.Y);
+            }               
         }
 
         //Ball collision check
         internal void BallCollision(Data.IBall ball)
         {
-            List<Data.IBall> balls = layerBellow.getAllBalls();
-            foreach (var otherBall in balls)
+            lock (_collisionLock)
             {
-                if (otherBall != ball)
+                List<Data.IBall> balls = layerBellow.getAllBalls();
+                foreach (var otherBall in balls)
                 {
-                    double distance = Math.Sqrt(Math.Pow(ball.Position.X - otherBall.Position.X, 2) + Math.Pow(ball.Position.Y - otherBall.Position.Y, 2));
-                    if (distance <= ball.Radius + otherBall.Radius)
+                    if (otherBall != ball)
                     {
-                        Vector2 newVelocity = new Vector2(-ball.Velocity.X, -ball.Velocity.Y);
-                        ball.Velocity = newVelocity;
+                        double distance = Math.Sqrt(Math.Pow((ball.Position.X + ball.Velocity.X) - (otherBall.Position.X + otherBall.Velocity.X), 2) + Math.Pow((ball.Position.Y + otherBall.Velocity.Y) - (otherBall.Position.Y + otherBall.Velocity.Y), 2));
+                        if (distance <= ball.Radius + otherBall.Radius)
+                        {
+                            float firstX = (ball.Velocity.X * (ball.Mass - otherBall.Mass) + 2 * otherBall.Mass * otherBall.Velocity.X) / (ball.Mass + otherBall.Mass);
+                            float firstY = (ball.Velocity.Y * (ball.Mass - otherBall.Mass) + 2 * otherBall.Mass * otherBall.Velocity.Y) / (ball.Mass + otherBall.Mass);
+                            float secondX = (otherBall.Velocity.X * (otherBall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.X) / (ball.Mass + otherBall.Mass);
+                            float secondY = (otherBall.Velocity.Y * (otherBall.Mass - ball.Mass) + 2 * ball.Mass * ball.Velocity.Y) / (ball.Mass + otherBall.Mass);
+
+                            ball.Velocity = new Vector2(firstX, firstY);
+                            otherBall.Velocity = new Vector2(secondX, secondY);
+                        }
                     }
                 }
-            }
+            }  
         }
 
         public override void Start(int numberOfBalls, Action<IPosition, IBall> upperLayerHandler)
@@ -63,7 +75,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic
                 throw new ObjectDisposedException(nameof(BusinessLogicImplementation));
             if (upperLayerHandler == null)
                 throw new ArgumentNullException(nameof(upperLayerHandler));
-            layerBellow.Start(numberOfBalls, (startingPosition, databall) => upperLayerHandler(new Position(startingPosition.x, startingPosition.x), new Ball(databall)));
+            layerBellow.Start(numberOfBalls, (startingPosition, databall) => upperLayerHandler(new Position(startingPosition.X, startingPosition.Y), new Ball(databall)));
         }
 
         public override void Dispose()

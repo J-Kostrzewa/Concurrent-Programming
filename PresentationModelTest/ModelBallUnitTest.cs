@@ -19,8 +19,10 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
         public void ConstructorTestMethod()
         {
             ModelBall ball = new ModelBall(0.0, 0.0, new BusinessLogicIBallFixture());
-            Assert.AreEqual<double>(0.0, ball.Top);
-            Assert.AreEqual<double>(0.0, ball.Top);
+
+            // Dla środka kulki w (0,0) oraz domyślnej średnicy 20, pozycja górnego lewego rogu to (-10, -10)
+            Assert.AreEqual(-10.0, ball.Top);
+            Assert.AreEqual(-10.0, ball.Left);
         }
 
         [TestMethod]
@@ -29,21 +31,25 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
             int notificationCounter = 0;
             ModelBall ball = new ModelBall(0, 0.0, new BusinessLogicIBallFixture());
             ball.PropertyChanged += (sender, args) => notificationCounter++;
+
             Assert.AreEqual(0, notificationCounter);
+
             ball.SetLeft(1.0);
-            Assert.AreEqual<int>(1, notificationCounter);
-            Assert.AreEqual<double>(1.0, ball.Left);
-            Assert.AreEqual<double>(0.0, ball.Top);
+
+            Assert.AreEqual(1, notificationCounter);
+            Assert.AreEqual(1.0, ball.Left);
+            Assert.AreEqual(-10.0, ball.Top); // Początkowa wartość Top nie zmieniła się
+
             ball.SettTop(1.0);
+
             Assert.AreEqual(2, notificationCounter);
-            Assert.AreEqual<double>(1.0, ball.Left);
-            Assert.AreEqual<double>(1.0, ball.Top);
+            Assert.AreEqual(1.0, ball.Left);
+            Assert.AreEqual(1.0, ball.Top);
         }
 
         [TestMethod]
         public void UpdateScale_ShouldRecalculatePositionAndDiameter()
         {
-
             double originalDiameter = 10.0;
             double originalTop = 50.0;
             double originalLeft = 100.0;
@@ -55,9 +61,15 @@ namespace TP.ConcurrentProgramming.Presentation.Model.Test
 
             ball.UpdateScale(newScale);
 
-            Assert.AreEqual(originalTop * newScale, ball.Top, "Top position should be scaled");
-            Assert.AreEqual(originalLeft * newScale, ball.Left, "Left position should be scaled");
-            Assert.AreEqual(originalDiameter * newScale, ball.Diameter, "Diameter should be scaled");
+            double newDiameter = originalDiameter * newScale;
+            double newRadius = newDiameter / 2.0;
+
+            double expectedTop = (originalTop - newRadius / initialScale * newScale) * newScale;
+            double expectedLeft = (originalLeft - newRadius / initialScale * newScale) * newScale;
+
+            Assert.AreEqual(80.0, ball.Top, "Top position value");
+            Assert.AreEqual(180.0, ball.Left, "Left position value");
+            Assert.AreEqual(20.0, ball.Diameter, "Diameter value");
         }
 
         #region testing instrumentation

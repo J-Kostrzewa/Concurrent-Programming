@@ -8,120 +8,156 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
 using TP.ConcurrentProgramming.Data;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
 {
-  [TestClass]
-  public class BusinessLogicImplementationUnitTest
-  {
-    [TestMethod]
-    public void ConstructorTestMethod()
+    [TestClass]
+    public class BusinessLogicImplementationUnitTest
     {
-      using (BusinessLogicImplementation newInstance = new(new DataLayerConstructorFixcure()))
-      {
-        bool newInstanceDisposed = true;
-        newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
-        Assert.IsFalse(newInstanceDisposed);
-      }
-    }
+        [TestMethod]
+        public void ConstructorTestMethod()
+        {
+            using (BusinessLogicImplementation newInstance = new(new DataLayerConstructorFixture()))
+            {
+                bool newInstanceDisposed = true;
+                newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
+                Assert.IsFalse(newInstanceDisposed);
+            }
+        }
 
-    [TestMethod]
-    public void DisposeTestMethod()
-    {
-      DataLayerDisposeFixcure dataLayerFixcure = new DataLayerDisposeFixcure();
-      BusinessLogicImplementation newInstance = new(dataLayerFixcure);
-      Assert.IsFalse(dataLayerFixcure.Disposed);
-      bool newInstanceDisposed = true;
-      newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
-      Assert.IsFalse(newInstanceDisposed);
-      newInstance.Dispose();
-      newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
-      Assert.IsTrue(newInstanceDisposed);
-      Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
-      Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
-      Assert.IsTrue(dataLayerFixcure.Disposed);
-    }
+        [TestMethod]
+        public void DisposeTestMethod()
+        {
+            DataLayerDisposeFixture dataLayerFixture = new DataLayerDisposeFixture();
+            BusinessLogicImplementation newInstance = new(dataLayerFixture);
 
-    [TestMethod]
-    public void StartTestMethod()
-    {
-      DataLayerStartFixcure dataLayerFixcure = new();
-      using (BusinessLogicImplementation newInstance = new(dataLayerFixcure))
-      {
-        int called = 0;
-        int numberOfBalls2Create = 10;
-        newInstance.Start(
-          numberOfBalls2Create,
-          (startingPosition, ball) => { called++; Assert.IsNotNull(startingPosition); Assert.IsNotNull(ball); });
-        Assert.AreEqual<int>(1, called);
-        Assert.IsTrue(dataLayerFixcure.StartCalled);
-        Assert.AreEqual<int>(numberOfBalls2Create, dataLayerFixcure.NumberOfBallseCreated);
-      }
-    }
+            Assert.IsFalse(dataLayerFixture.Disposed);
+            bool newInstanceDisposed = true;
+            newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
+            Assert.IsFalse(newInstanceDisposed);
 
-    #region testing instrumentation
+            newInstance.Dispose();
 
-    private class DataLayerConstructorFixcure : Data.DataAbstractAPI
-    {
-      public override void Dispose()
-      { }
+            newInstance.CheckObjectDisposed(x => newInstanceDisposed = x);
+            Assert.IsTrue(newInstanceDisposed);
+            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Dispose());
+            Assert.ThrowsException<ObjectDisposedException>(() => newInstance.Start(0, (position, ball) => { }));
+            Assert.IsTrue(dataLayerFixture.Disposed);
+        }
 
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
-      {
-        throw new NotImplementedException();
-      }
-    }
+        [TestMethod]
+        public void StartTestMethod()
+        {
+            DataLayerStartFixture dataLayerFixture = new();
+            using (BusinessLogicImplementation newInstance = new(dataLayerFixture))
+            {
+                int called = 0;
+                int numberOfBalls2Create = 10;
 
-    private class DataLayerDisposeFixcure : Data.DataAbstractAPI
-    {
-      internal bool Disposed = false;
+                newInstance.Start(
+                    numberOfBalls2Create,
+                    (startingPosition, ball) =>
+                    {
+                        called++;
+                        Assert.IsNotNull(startingPosition);
+                        Assert.IsNotNull(ball);
+                    });
 
-      public override void Dispose()
-      {
-        Disposed = true;
-      }
+                Assert.AreEqual(1, called);
+                Assert.IsTrue(dataLayerFixture.StartCalled);
+                Assert.AreEqual(numberOfBalls2Create, dataLayerFixture.NumberOfBallsCreated);
+            }
+        }
 
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
-      {
-        throw new NotImplementedException();
-      }
-    }
+        #region testing instrumentation
 
-    private class DataLayerStartFixcure : Data.DataAbstractAPI
-    {
-      internal bool StartCalled = false;
-      internal int NumberOfBallseCreated = -1;
+        private class DataLayerConstructorFixture : Data.DataAbstractAPI
+        {
+            public override int getWidth() => 400;
+            public override int getHeight() => 400;
+            public override List<Data.IBall> getAllBalls()
+            {
+                return new List<Data.IBall>();
+            }
 
-      public override void Dispose()
-      { }
+            public override void Dispose() { }
 
-      public override void Start(int numberOfBalls, Action<IVector, Data.IBall> upperLayerHandler)
-      {
-        StartCalled = true;
-        NumberOfBallseCreated = numberOfBalls;
-        upperLayerHandler(new DataVectorFixture(), new DataBallFixture());
-      }
+            public override void Start(int numberOfBalls, Action<Vector2, Data.IBall> upperLayerHandler)
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-      private record DataVectorFixture : Data.IVector
-      {
-        public double x { get; init; }
-        public double y { get; init; }
-      }
+        private class DataLayerDisposeFixture : Data.DataAbstractAPI
+        {
+            internal bool Disposed = false;
 
-      private class DataBallFixture : Data.IBall
-      {
-        public IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+            public override int getWidth() => 400;
+            public override int getHeight() => 400;
+            public override List<Data.IBall> getAllBalls()
+            {
+                return new List<Data.IBall>();
+            }
 
-        public event EventHandler<IVector>? NewPositionNotification = null;
+            public override void Dispose()
+            {
+                Disposed = true;
+            }
 
-                void Data.IBall.SetPosition(IVector position)
+            public override void Start(int numberOfBalls, Action<Vector2, Data.IBall> upperLayerHandler)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class DataLayerStartFixture : Data.DataAbstractAPI
+        {
+            internal bool StartCalled = false;
+            internal int NumberOfBallsCreated = -1;
+
+            public override int getWidth() => 400;
+            public override int getHeight() => 400;
+            public override List<Data.IBall> getAllBalls()
+            {
+                return new List<Data.IBall>();
+            }
+
+            public override void Dispose() { }
+
+            public override void Start(int numberOfBalls, Action<Vector2, Data.IBall> upperLayerHandler)
+            {
+                StartCalled = true;
+                NumberOfBallsCreated = numberOfBalls;
+                upperLayerHandler(new Vector2(10.0f, 10.0f), new DataBallFixture());
+            }
+
+            private class DataBallFixture : Data.IBall
+            {
+                public Vector2 Position => new Vector2(10.0f, 10.0f);
+                public Vector2 Velocity
                 {
-                    throw new NotImplementedException();
+                    get => new Vector2(1.0f, 1.0f);
+                    set { /* Implementacja testowa */ }
+                }
+                public bool IsMoving
+                {
+                    get => false;
+                    set { /* Implementacja testowa */ }
+                }
+                public int Radius => 10;
+                public int Mass => 5;
+
+                public event EventHandler<Vector2>? NewPositionNotification;
+
+                public void StartThread()
+                {
+                    // Implementacja testowa - nic nie rób
                 }
             }
-    }
+        }
 
-    #endregion testing instrumentation
-  }
+        #endregion testing instrumentation
+    }
 }

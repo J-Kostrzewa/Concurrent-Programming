@@ -17,11 +17,19 @@ using UnderneathLayerAPI = TP.ConcurrentProgramming.BusinessLogic.BusinessLogicA
 
 namespace TP.ConcurrentProgramming.Presentation.Model
 {
-    /// <summary>
-    /// Class Model - implements the <see cref="ModelAbstractApi" />
-    /// </summary>
+
     internal class ModelImplementation : ModelAbstractApi
     {
+        private bool Disposed = false;
+        private double _scaleFactor = 1.0;
+        private readonly IObservable<EventPattern<BallChaneEventArgs>> eventObservable = null;
+        private readonly UnderneathLayerAPI layerBellow = null;
+        private readonly List<IBall> _balls = new List<IBall>();
+        public event EventHandler<BallChaneEventArgs> BallChanged;
+        public override double LogicalGameAreaWidth => BusinessLogicAbstractAPI.GetDimensions.TableWidth;
+        public override double LogicalGameAreaHeight => BusinessLogicAbstractAPI.GetDimensions.TableHeight;
+        public override double BallDiameter => BusinessLogicAbstractAPI.GetDimensions.BallDimension;
+
         internal ModelImplementation() : this(null)
         { }
 
@@ -31,17 +39,13 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             eventObservable = Observable.FromEventPattern<BallChaneEventArgs>(this, "BallChanged");
         }
 
-        #region ModelAbstractApi
-
-        private double _scaleFactor = 1.0;
-
         // Implementacja właściwości ScaleFactor
         public override double ScaleFactor
         {
             get => _scaleFactor;
             set
             {
-                if (_scaleFactor != value && value > 0)
+                if (_scaleFactor != value && value >= 0.5 && value <= 1.5)
                 {
                     _scaleFactor = value;
                     // Aktualizacja istniejących kulek
@@ -56,27 +60,10 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             }
         }
 
-        public override void Dispose()
-        {
-            if (Disposed)
-                throw new ObjectDisposedException(nameof(Model));
-            layerBellow.Dispose();
-            Disposed = true;
-        }
-
-        public override IDisposable Subscribe(IObserver<IBall> observer)
-        {
-            return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
-        }
-
         public override void Start(int numberOfBalls)
         {
             layerBellow.Start(numberOfBalls, StartHandler);
         }
-
-        public override double LogicalGameAreaWidth => BusinessLogicAbstractAPI.GetDimensions.TableWidth;
-        public override double LogicalGameAreaHeight => BusinessLogicAbstractAPI.GetDimensions.TableHeight;
-        public override double BallDiameter => BusinessLogicAbstractAPI.GetDimensions.BallDimension;
 
         public override void UpdateDimensions(double borderThickness,
                                         double extraWindowWidth,
@@ -93,33 +80,27 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             dimensionsUpdatedCallback(gameAreaWidth, windowWidth, windowHeight);
         }
 
-        #endregion ModelAbstractApi
-
-        #region API
-
-        public event EventHandler<BallChaneEventArgs> BallChanged;
-
-        #endregion API
-
-        #region private
-
-        private bool Disposed = false;
-        private readonly IObservable<EventPattern<BallChaneEventArgs>> eventObservable = null;
-        private readonly UnderneathLayerAPI layerBellow = null;
-        private readonly List<IBall> _balls = new List<IBall>();
-
         private void StartHandler(BusinessLogic.IPosition position, BusinessLogic.IBall ball)
         {
             // Tworzymy kulkę z uwzględnieniem aktualnego współczynnika skali
             ModelBall newBall = new ModelBall(position.x, position.y, ball, _scaleFactor);
-            newBall.Diameter = 20.0 * _scaleFactor;
+            newBall.Diameter = BallDiameter * _scaleFactor;
             _balls.Add(newBall);
             BallChanged.Invoke(this, new BallChaneEventArgs() { Ball = newBall });
         }
 
-        #endregion private
+        public override IDisposable Subscribe(IObserver<IBall> observer)
+        {
+            return eventObservable.Subscribe(x => observer.OnNext(x.EventArgs.Ball), ex => observer.OnError(ex), () => observer.OnCompleted());
+        }
 
-        #region TestingInfrastructure
+        public override void Dispose()
+        {
+            if (Disposed)
+                throw new ObjectDisposedException(nameof(Model));
+            layerBellow.Dispose();
+            Disposed = true;
+        }
 
         [Conditional("DEBUG")]
         internal void CheckObjectDisposed(Action<bool> returnInstanceDisposed)
@@ -138,10 +119,7 @@ namespace TP.ConcurrentProgramming.Presentation.Model
         {
             returnBallChangedIsNull(BallChanged == null);
         }
-
-        #endregion TestingInfrastructure
     }
-
     public class BallChaneEventArgs : EventArgs
     {
         public IBall Ball { get; init; }

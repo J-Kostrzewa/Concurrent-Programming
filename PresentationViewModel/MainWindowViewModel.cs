@@ -20,7 +20,23 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
 {
     public class MainWindowViewModel : ViewModelBase, IDisposable
     {
-        #region ctor
+        private double _windowWidth;
+        private double _windowHeight;
+        private int _ballCount = 5;
+        private IDisposable Observer = null;
+        private ModelAbstractApi ModelLayer;
+        private bool Disposed = false;
+        private double _canvasSize;
+        private int maxBalls = 10;
+        private bool isRunning = false; // Flaga do sprawdzania, czy model jest uruchomiony
+        // Skalowane wymiary obszaru gry
+        private double _gameAreaSize;
+
+        public ICommand IncreaseBallCountCommand { get; }
+        public ICommand DecreaseBallCountCommand { get; }
+        public ICommand StartCommand { get; }
+
+        public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
 
         public MainWindowViewModel() : this(null)
         { }
@@ -51,13 +67,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             DecreaseBallCountCommand = new RelayCommand(DecreaseBallCount, () => (BallCount > 1 && !isRunning));
             StartCommand = new RelayCommand(() => Start(BallCount), () => !isRunning);
         }
-
-        #endregion ctor
-
-        #region public API
-
-        // Skalowane wymiary obszaru gry
-        private double _gameAreaSize;
+        
         public double GameAreaSize
         {
             get => _gameAreaSize;
@@ -98,10 +108,6 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             }
         }
 
-        public ICommand IncreaseBallCountCommand { get; }
-        public ICommand DecreaseBallCountCommand { get; }
-        public ICommand StartCommand { get; }
-
         public double WindowWidth
         {
             get => _windowWidth;
@@ -129,12 +135,24 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             isRunning = true;
             RaiseCanExecuteChanged();
         }
+        private void IncreaseBallCount()
+        {
+            if (BallCount < maxBalls) // Maksymalna liczba kul
+                BallCount++;
+        }
 
-        public ObservableCollection<ModelIBall> Balls { get; } = new ObservableCollection<ModelIBall>();
+        private void DecreaseBallCount()
+        {
+            if (BallCount > 1) // Minimalna liczba kul to 1
+                BallCount--;
+        }
 
-        #endregion public API
-
-        #region IDisposable
+        private void RaiseCanExecuteChanged()
+        {
+            (IncreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (DecreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (StartCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -160,41 +178,5 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        #endregion IDisposable
-
-        #region private
-
-        private double _windowWidth;
-        private double _windowHeight;
-        private int _ballCount = 5;
-        private IDisposable Observer = null;
-        private ModelAbstractApi ModelLayer;
-        private bool Disposed = false;
-        private double _canvasSize;
-
-        private int maxBalls = 10;
-        private bool isRunning = false; // Flaga do sprawdzania, czy model jest uruchomiony
-
-        private void IncreaseBallCount()
-        {
-            if (BallCount < maxBalls) // Maksymalna liczba kul
-                BallCount++;
-        }
-
-        private void DecreaseBallCount()
-        {
-            if (BallCount > 1) // Minimalna liczba kul to 1
-                BallCount--;
-        }
-
-        private void RaiseCanExecuteChanged()
-        {
-            (IncreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (DecreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (StartCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        }
-
-        #endregion private
     }
 }

@@ -8,6 +8,8 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
+
 namespace TP.ConcurrentProgramming.Data.Test
 {
   [TestClass]
@@ -17,11 +19,11 @@ namespace TP.ConcurrentProgramming.Data.Test
     public void ConstructorTestMethod()
     {
       Random randomGenerator = new();
-      double XComponent = randomGenerator.NextDouble();
-      double YComponent = randomGenerator.NextDouble();
-      Vector newInstance = new(XComponent, YComponent);
-      Assert.AreEqual<double>(XComponent, newInstance.x);
-      Assert.AreEqual<double>(YComponent, newInstance.y);
+      float XComponent = (float)randomGenerator.NextDouble();
+      float YComponent = (float)randomGenerator.NextDouble();
+      Vector2 newInstance = new(XComponent, YComponent);
+      Assert.AreEqual<double>(XComponent, newInstance.X);
+      Assert.AreEqual<double>(YComponent, newInstance.Y);
     }
   }
 }

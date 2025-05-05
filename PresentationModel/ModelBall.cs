@@ -19,17 +19,27 @@ namespace TP.ConcurrentProgramming.Presentation.Model
 {
     internal class ModelBall : IBall
     {
+        private double TopBackingField;
+        private double LeftBackingField;
+        private double _originalTop; // Oryginalna pozycja (nieskalowana)
+        private double _originalLeft; // Oryginalna pozycja (nieskalowana)
+        private double _scaleFactor; // Współczynnik skalowania
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ModelBall(double top, double left, LogicIBall underneathBall, double scale = 1.0)
         {
             _originalTop = top;
             _originalLeft = left;
             _scaleFactor = scale;
-            TopBackingField = top * _scaleFactor;
-            LeftBackingField = left * _scaleFactor;
+
+            Diameter = 20.0 * _scaleFactor; 
+            double radius = Diameter / 2.0;
+
+            TopBackingField = (top - radius) * _scaleFactor;
+            LeftBackingField = (left - radius) * _scaleFactor;
             underneathBall.NewPositionNotification += NewPositionNotification;
         }
-
-        #region IBall
+        public double Diameter { get; set; } = 0;
 
         public double Top
         {
@@ -55,24 +65,6 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             }
         }
 
-        public double Diameter { get; set; } = 0;
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion INotifyPropertyChanged
-
-        #endregion IBall
-
-        #region private
-
-        private double TopBackingField;
-        private double LeftBackingField;
-        private double _originalTop; // Oryginalna pozycja (nieskalowana)
-        private double _originalLeft; // Oryginalna pozycja (nieskalowana)
-        private double _scaleFactor; // Współczynnik skalowania
-
         // Metoda do aktualizacji skali kulki
         internal void UpdateScale(double newScaleFactor)
         {
@@ -80,16 +72,16 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             {
                 _scaleFactor = newScaleFactor;
 
-                // Aktualizacja pozycji
-                Top = _originalTop * _scaleFactor;
-                Left = _originalLeft * _scaleFactor;
-
                 // Aktualizacja średnicy (tylko jeśli jest zainicjowana)
                 if (Diameter > 0)
                 {
                     double originalDiameter = Diameter / (this._scaleFactor / newScaleFactor);
                     Diameter = originalDiameter * _scaleFactor;
                 }
+
+                double radius = Diameter / 2.0;
+                Top = (_originalTop - radius) * _scaleFactor;
+                Left = (_originalLeft - radius) * _scaleFactor;
             }
         }
 
@@ -100,18 +92,15 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             _originalLeft = e.x;
 
             // Ustawienie skalowanych wartości
-            Top = _originalTop * _scaleFactor;
-            Left = _originalLeft * _scaleFactor;
+            double radius = Diameter / 2.0;
+            Top = (_originalTop - radius) * _scaleFactor;
+            Left = (_originalLeft - radius) * _scaleFactor;
         }
 
         private void RaisePropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        #endregion private
-
-        #region testing instrumentation
 
         [Conditional("DEBUG")]
         internal void SetLeft(double x)
@@ -121,6 +110,5 @@ namespace TP.ConcurrentProgramming.Presentation.Model
         internal void SettTop(double x)
         { Top = x; }
 
-        #endregion testing instrumentation
     }
 }

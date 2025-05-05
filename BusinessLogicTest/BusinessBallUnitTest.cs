@@ -8,76 +8,116 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
 {
     [TestClass]
     public class BallUnitTest
     {
         [TestMethod]
-        public void MoveTestMethod()
+        public void NewPositionNotificationTest()
         {
             DataBallFixture dataBallFixture = new DataBallFixture();
-            Ball newInstance = new(dataBallFixture);
+            Ball newInstance = new Ball(dataBallFixture);
             int numberOfCallBackCalled = 0;
-            newInstance.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); Assert.IsNotNull(position); numberOfCallBackCalled++; };
-            dataBallFixture.Move();
-            Assert.AreEqual<int>(2, numberOfCallBackCalled);
+            IPosition receivedPosition = null;
+
+            newInstance.NewPositionNotification += (sender, position) =>
+            {
+                Assert.IsNotNull(sender);
+                Assert.IsNotNull(position);
+                receivedPosition = position;
+                numberOfCallBackCalled++;
+            };
+
+            dataBallFixture.RaisePositionChangeEvent();
+
+            Assert.AreEqual(1, numberOfCallBackCalled);
+            Assert.IsNotNull(receivedPosition);
+            Assert.AreEqual(5.0, receivedPosition.x);
+            Assert.AreEqual(10.0, receivedPosition.y);
+        }
+
+        [TestMethod]
+        public void BusinessBall_ShouldHandleMultipleEvents()
+        {
+            DataBallFixture dataBallFixture = new DataBallFixture();
+            Ball newInstance = new Ball(dataBallFixture);
+            int numberOfCallBackCalled = 0;
+
+            newInstance.NewPositionNotification += (sender, position) =>
+            {
+                numberOfCallBackCalled++;
+            };
+
+            dataBallFixture.RaisePositionChangeEvent();
+            dataBallFixture.RaisePositionChangeEvent();
+
+            Assert.AreEqual(2, numberOfCallBackCalled);
+        }
+
+        [TestMethod]
+        public void BusinessBall_ShouldNotifyWithCorrectData()
+        {
+            DataBallFixture dataBallFixture = new DataBallFixture();
+            Ball newInstance = new Ball(dataBallFixture);
+            IPosition lastPosition = null;
+
+            newInstance.NewPositionNotification += (sender, position) =>
+            {
+                lastPosition = position;
+            };
+
+            dataBallFixture.RaisePositionChangeEvent(new Vector2(20.0f, 30.0f));
+
+            Assert.IsNotNull(lastPosition);
+            Assert.AreEqual(20.0, lastPosition.x);
+            Assert.AreEqual(30.0, lastPosition.y);
         }
 
         #region testing instrumentation
 
         private class DataBallFixture : Data.IBall
         {
-            private Data.IVector _velocity = new VectorFixture(0.0, 0.0);
-            private bool _isUpdating = false;
+            private Vector2 _position = new Vector2(5.0f, 10.0f);
+            private Vector2 _velocity = new Vector2(1.0f, 1.0f);
+            private bool _isMoving = false;
 
-            public Data.IVector Velocity
+            public event EventHandler<Vector2>? NewPositionNotification;
+
+            public Vector2 Position => _position;
+
+            public Vector2 Velocity
             {
                 get => _velocity;
-                set
-                {
-                    if (value == null)
-                        throw new ArgumentNullException(nameof(value), "Velocity cannot be null.");
-                    _velocity = value;
-                }
+                set => _velocity = value;
             }
 
-            public event EventHandler<Data.IVector>? NewPositionNotification;
-
-            internal void Move()
+            public bool IsMoving
             {
-                NewPositionNotification?.Invoke(this, _velocity);
+                get => _isMoving;
+                set => _isMoving = value;
             }
 
-            void Data.IBall.SetPosition(Data.IVector position)
+            public int Radius => 10;
+
+            public int Mass => 5;
+
+            public void StartThread()
             {
-                if (position == null)
-                    throw new ArgumentNullException(nameof(position), "Position cannot be null.");
-
-                if (_isUpdating)
-                    return;
-
-                try
-                {
-                    _isUpdating = true;
-                    NewPositionNotification?.Invoke(this, position);
-                }
-                finally
-                {
-                    _isUpdating = false;
-                }
+                // Implementacja testowa - nic nie rób
             }
-        }
 
-        private class VectorFixture : Data.IVector
-        {
-            internal VectorFixture(double X, double Y)
+            internal void RaisePositionChangeEvent()
             {
-                x = X; y = Y;
+                NewPositionNotification?.Invoke(this, _position);
             }
 
-            public double x { get; init; }
-            public double y { get; init; }
+            internal void RaisePositionChangeEvent(Vector2 position)
+            {
+                _position = position;
+                NewPositionNotification?.Invoke(this, _position);
+            }
         }
 
         #endregion testing instrumentation
