@@ -66,7 +66,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
                 if (_gameAreaSize != value)
                 {
                     _gameAreaSize = value;
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
             }
         }
@@ -79,7 +79,7 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
                 if (_canvasSize != value)
                 {
                     _canvasSize = value;
-                    RaisePropertyChanged();
+                    //RaisePropertyChanged();
                 }
             }
         }
