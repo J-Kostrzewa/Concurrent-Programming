@@ -8,6 +8,7 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Diagnostics;
 using System.Numerics;
 
 namespace TP.ConcurrentProgramming.Data
@@ -23,11 +24,22 @@ namespace TP.ConcurrentProgramming.Data
         private readonly object velocityLock = new object();
         private bool isMoving;
 
+        private static BallLogger _logger = new BallLogger();
+        private readonly int _ballId;
+        private static int _ballCounter = 0;
+        private static readonly object _counterLock = new object();
+
         internal Ball(Vector2 initialPosition)
         {
             Random random = new Random();
             position = initialPosition;
             velocity = new Vector2(random.Next(1,10), random.Next(1,10));
+
+            // Przypisanie unikalnego ID dla kulki
+            lock (_counterLock)
+            {
+                _ballId = _ballCounter++;
+            }
         }
 
         int IBall.Radius => radius;
@@ -59,29 +71,43 @@ namespace TP.ConcurrentProgramming.Data
             thread.IsBackground = true;
             thread.Start();
         }
-        internal async void Move()
+        private async void Move()
         {
             isMoving = true;
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            float startingTime = 0f;
+
             while (isMoving)
             {
-                lock (positionLock)
-                {
-                    //position = new Vector2(position.X + velocity.X, position.Y + velocity.Y);
-                    position += velocity * 0.5f;
-                }
-                RaiseNewPositionChangeNotification();
+                float currentTime = stopwatch.ElapsedMilliseconds;
+                float delta = currentTime - startingTime;
 
-                // Oblicz opóźnienie na podstawie prędkości
-                double speed;
-                lock (velocityLock)
+                if (delta >= 1f / 120f)
                 {
-                    speed = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
+
+                    lock (positionLock)
+                    {
+                        position += velocity * 0.4f;
+                    }
+
+                    //Logowanie 
+                    _logger.LogPosition(_ballId, position, velocity);
+                   
+
+                    RaiseNewPositionChangeNotification();
+
+                    // Oblicz opóźnienie na podstawie prędkości
+                    double speed;
+                    lock (velocityLock)
+                    {
+                        speed = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(1f / 120f));
                 }
-                int delay = (int)Math.Clamp(1000 / (speed * 40), 10, 30);
-                await Task.Delay(delay);
+                
             }
 
-            
         }
         private void RaiseNewPositionChangeNotification()
         {
