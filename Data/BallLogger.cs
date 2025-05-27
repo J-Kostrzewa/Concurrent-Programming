@@ -11,13 +11,30 @@ namespace TP.ConcurrentProgramming.Data
         private readonly Thread loggerThread;
         private bool isDisposed = false;
 
-        public BallLogger(string logFilePath = "ball_diagnostics.log")
+        public BallLogger()
         {
-            this.logFilePath = logFilePath;
+            DateTime logTime = DateTime.Now;
+            this.logFilePath = logTime.ToString("yyyy-MM-dd HH_mm_ss_fff") + ".log";
             
             // Inicjalizacja pliku logu
             File.WriteAllText(logFilePath, $"BallLogger started at: {DateTime.Now}\n");
             
+            // Uruchomienie osobnego w¹tku do przetwarzania logów
+            loggerThread = new Thread(ProcessLogQueue)
+            {
+                IsBackground = true,
+                Name = "BallLoggerThread"
+            };
+            loggerThread.Start();
+        }
+
+        public BallLogger(string logFilePath)
+        {
+            this.logFilePath = logFilePath;
+
+            // Inicjalizacja pliku logu
+            File.WriteAllText(logFilePath, $"BallLogger started at: {DateTime.Now}\n");
+
             // Uruchomienie osobnego w¹tku do przetwarzania logów
             loggerThread = new Thread(ProcessLogQueue)
             {
