@@ -1,0 +1,16 @@
+H:\polibuda\wspolbiezne\repo\BusinessLogic\bin\Debug\net8.0\TP.ConcurrentProgramming.BusinessLogic.deps.json
+H:\polibuda\wspolbiezne\repo\BusinessLogic\bin\Debug\net8.0\TP.ConcurrentProgramming.BusinessLogic.dll
+H:\polibuda\wspolbiezne\repo\BusinessLogic\bin\Debug\net8.0\TP.ConcurrentProgramming.BusinessLogic.pdb
+H:\polibuda\wspolbiezne\repo\BusinessLogic\bin\Debug\net8.0\DataLayer.dll
+H:\polibuda\wspolbiezne\repo\BusinessLogic\bin\Debug\net8.0\DataLayer.pdb
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.csproj.AssemblyReference.cache
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.GeneratedMSBuildEditorConfig.editorconfig
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.AssemblyInfoInputs.cache
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.AssemblyInfo.cs
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.csproj.CoreCompileInputs.cache
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\BusinessLogic.sourcelink.json
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\Business.CF5D6E35.Up2Date
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\TP.ConcurrentProgramming.BusinessLogic.dll
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\refint\TP.ConcurrentProgramming.BusinessLogic.dll
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\TP.ConcurrentProgramming.BusinessLogic.pdb
+H:\polibuda\wspolbiezne\repo\BusinessLogic\obj\Debug\net8.0\ref\TP.ConcurrentProgramming.BusinessLogic.dll

@@ -25,7 +25,7 @@ namespace TP.ConcurrentProgramming.Data.Test
                 logger.LogPosition(ballId, position, velocity);
 
                 // Czekamy chwilę, aby logger miał czas na zapisanie danych
-                Thread.Sleep(300);
+                Thread.Sleep(1);
             } // Dispose zamyka logger i zapisuje wszystkie pozostałe logi
 
             Assert.IsTrue(File.Exists(testLogPath), "Plik logu powinien zostać utworzony");
