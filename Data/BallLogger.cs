@@ -1,144 +1,98 @@
 using System.Collections.Concurrent;
 using System.Numerics;
+using System.Text.Json;
 
 namespace TP.ConcurrentProgramming.Data
 {
     internal class BallLogger : IDisposable
     {
-        private readonly string logFilePath;
-        private readonly ConcurrentQueue<LogEntry> logQueue = new ConcurrentQueue<LogEntry>();
-        private readonly ManualResetEvent stopEvent = new ManualResetEvent(false);
-        private readonly Thread loggerThread;
-        private bool isDisposed = false;
+        private static readonly Lazy<BallLogger> _instance = new(() => new BallLogger());
+        internal static BallLogger Instance => _instance.Value;
 
-        public BallLogger()
+        private readonly ConcurrentQueue<LogEntry> _logQueue = new();
+        private readonly ManualResetEvent _stopEvent = new(false);
+        private readonly Thread _loggerThread;
+        private readonly StreamWriter _writer;
+        private bool _isDisposed = false;
+        private readonly int _flushIntervalMs = 1000;
+
+        private BallLogger() : this(null)
         {
-            DateTime logTime = DateTime.Now;
-            this.logFilePath = logTime.ToString("yyyy-MM-dd HH_mm_ss_fff") + ".log";
-            
-            // Inicjalizacja pliku logu
-            File.WriteAllText(logFilePath, $"BallLogger started at: {DateTime.Now}\n");
-            
-            // Uruchomienie osobnego w¹tku do przetwarzania logów
-            loggerThread = new Thread(ProcessLogQueue)
+        }
+
+        internal BallLogger(string logFilePath = null)
+        {
+            // Jeœli nie podano œcie¿ki, u¿yj domyœlnej opartej na czasie
+            if (string.IsNullOrEmpty(logFilePath))
+            {
+                logFilePath = $"ball_log_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.json";
+            }
+
+            _writer = new StreamWriter(logFilePath, append: false);
+            _writer.WriteLine("[");
+
+            _loggerThread = new Thread(ProcessLogQueue)
             {
                 IsBackground = true,
                 Name = "BallLoggerThread"
             };
-            loggerThread.Start();
+            _loggerThread.Start();
         }
 
-        public BallLogger(string logFilePath)
-        {
-            this.logFilePath = logFilePath;
-
-            // Inicjalizacja pliku logu
-            File.WriteAllText(logFilePath, $"BallLogger started at: {DateTime.Now}\n");
-
-            // Uruchomienie osobnego w¹tku do przetwarzania logów
-            loggerThread = new Thread(ProcessLogQueue)
-            {
-                IsBackground = true,
-                Name = "BallLoggerThread"
-            };
-            loggerThread.Start();
-        }
-
-        /// <summary>
-        /// Loguje pozycjê kulki na danym etapie
-        /// </summary>
         public void LogPosition(int ballId, Vector2 position, Vector2 velocity)
         {
-            if (isDisposed) return;
-
-            logQueue.Enqueue(new LogEntry
+            if (_isDisposed) return;
+            _logQueue.Enqueue(new LogEntry
             {
                 BallId = ballId,
                 Timestamp = DateTime.Now,
-                Position = position,
-                Velocity = velocity
+                Position = position.X.ToString() + ", " + position.Y.ToString(),
+                Velocity = velocity.X.ToString() + ", " + velocity.Y.ToString()
             });
         }
 
-        /// <summary>
-        /// Metoda uruchamiana w osobnym w¹tku, zapisuj¹ca logi do pliku
-        /// </summary>
         private void ProcessLogQueue()
         {
-            while (!stopEvent.WaitOne(100)) // Sprawdzaj co 100ms
+            bool first = true;
+            while (!_stopEvent.WaitOne(_flushIntervalMs))
             {
-                // Przetwarzaj wszystkie dostêpne logi
-                while (logQueue.TryDequeue(out LogEntry entry))
-                {
-                    try
-                    {
-                        string logMessage = FormatLogEntry(entry);
-                        File.AppendAllText(logFilePath, logMessage);
-                    }
-                    catch (Exception ex)
-                    {
-                        // W przypadku b³êdu zapisu, zapisz informacjê w dedykowanym pliku b³êdów
-                        File.AppendAllText(logFilePath + ".error.log", 
-                            $"{DateTime.Now}: Error writing log: {ex.Message}\n");
-                    }
-                }
+                FlushBuffer(ref first);
             }
-
-            // Zapisz pozosta³e logi przed zakoñczeniem
-            while (logQueue.TryDequeue(out LogEntry entry))
-            {
-                try
-                {
-                    string logMessage = FormatLogEntry(entry);
-                    File.AppendAllText(logFilePath, logMessage);
-                }
-                catch { /* Ignorujemy b³êdy podczas zamykania */ }
-            }
+            // Ostatni flush po zakoñczeniu
+            FlushBuffer(ref first);
+            _writer.Flush();
         }
 
-        /// <summary>
-        /// Formatuje wpis logów do czytelnej postaci
-        /// </summary>
-        private string FormatLogEntry(LogEntry entry)
+        private void FlushBuffer(ref bool first)
         {
-            string timestamp = entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
-
-            return $"{timestamp} [POSITION] Ball {entry.BallId}: Pos({entry.Position.X:F2}, {entry.Position.Y:F2}), Vel({entry.Velocity.X:F2}, {entry.Velocity.Y:F2})\n";          
-
+            while (_logQueue.TryDequeue(out LogEntry entry))
+            {
+                string json = JsonSerializer.Serialize(entry);
+                if (!first) _writer.WriteLine(",");
+                _writer.Write(json);
+                first = false;
+            }
+            _writer.Flush();
         }
 
         public void Dispose()
         {
-            if (isDisposed) return;
-            isDisposed = true;
-
-            // Sygnalizuj w¹tkowi aby zakoñczy³ pracê
-            stopEvent.Set();
-            
-            // Czekaj na zakoñczenie w¹tku (z timeoutem)
-            if (!loggerThread.Join(1000))
-            {
-                // Jeœli w¹tek nie zakoñczy³ pracy w ci¹gu 1s, koñczymy go
-                try { loggerThread.Interrupt(); } 
-                catch { /* Ignorujemy b³êdy */ }
-            }
-
-            // Zwolnij zasoby
-            stopEvent.Dispose();
-            
-            // Informacja o zakoñczeniu pracy loggera
-            File.AppendAllText(logFilePath, $"BallLogger stopped at: {DateTime.Now}\n");
+            if (_isDisposed) return;
+            _isDisposed = true;
+            _stopEvent.Set();
+            _loggerThread.Join();
+            _writer.WriteLine("\n]");
+            Thread.Sleep(500);
+            _writer.Dispose();
+            _stopEvent.Dispose();
         }
 
-        /// <summary>
-        /// Struktura przechowuj¹ca informacje o logu
-        /// </summary>
         private struct LogEntry
         {
             public int BallId { get; set; }
             public DateTime Timestamp { get; set; }
-            public Vector2 Position { get; set; }
-            public Vector2 Velocity { get; set; }
+            public String Position { get; set; }
+            public String Velocity { get; set; }
         }
     }
 }

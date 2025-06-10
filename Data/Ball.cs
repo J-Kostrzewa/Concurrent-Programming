@@ -24,7 +24,6 @@ namespace TP.ConcurrentProgramming.Data
         private readonly object velocityLock = new object();
         private bool isMoving;
 
-        private static BallLogger _logger = new BallLogger();
         private readonly int _ballId;
         private static int _ballCounter = 0;
         private static readonly object _counterLock = new object();
@@ -77,6 +76,7 @@ namespace TP.ConcurrentProgramming.Data
             Stopwatch stopwatch = new();
             stopwatch.Start();
             float startingTime = 0f;
+            DateTime lastLogTime = DateTime.MinValue;
 
             while (isMoving)
             {
@@ -91,9 +91,13 @@ namespace TP.ConcurrentProgramming.Data
                         position += velocity * 0.4f;
                     }
 
-                    //Logowanie 
-                    _logger.LogPosition(_ballId, position, velocity);
-                   
+                    // Logowanie co 1 sekundę
+                    if ((DateTime.Now - lastLogTime).TotalSeconds >= 1)
+                    {
+                        BallLogger.Instance.LogPosition(_ballId, position, velocity);
+                        lastLogTime = DateTime.Now;
+                    }
+
 
                     RaiseNewPositionChangeNotification();
 

@@ -63,6 +63,7 @@ namespace TP.ConcurrentProgramming.Data
                 if (disposing)
                 {
                     BallsList.Clear();
+                    BallLogger.Instance.Dispose();
                 }
                 Disposed = true;
             }
